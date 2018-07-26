@@ -1,0 +1,5 @@
+# This is a log file. Please add here all relevant changes before push on GitHub.  
+
+2018 07 26
+First setup for our Network.
+log & ReadMe & gitignore files added.
