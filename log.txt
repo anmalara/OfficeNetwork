@@ -3,3 +3,4 @@
 2018 07 26
 First setup for our Network.
 log & ReadMe & gitignore files added.
+nTuple creation is set up. It needs new variable to be added.
