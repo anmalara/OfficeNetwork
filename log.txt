@@ -1,12 +1,16 @@
 # This is a log file. Please add here all relevant changes before push on GitHub.  
 
 2018 07 26
-First setup for our Network.
-log & ReadMe & gitignore files added.
-nTuple creation is set up. It needs new variable to be added.
+- First setup for our Network.
+- log & ReadMe & gitignore files added.
+- nTuple creation is set up. It needs new variable to be added.
 
 2018 08 17
-o Select Branches macro created:
+- Select Branches macro created:
 	- Loop over all the processes
 	- Loop over all the objects
 	- For Arne: have a look that the selection is different now. Bug fixed for samples with no objects stored and for reshaping of the matrix.
+
+2018 08 21
+- Select Branches now should be bug fixed:
+	- Need to be parallelised

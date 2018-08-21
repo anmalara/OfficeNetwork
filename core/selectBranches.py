@@ -8,42 +8,54 @@ import sys
 from Utils import *
 
 
+def selectBranches(file_name, tree_name, obj, selection_cuts, output_name):
+  array = root2array(filenames=file_name, treename=tree_name, branches=branch_name_list[obj], selection=selection_cuts)
+  # it needs 2 steps to a proper coversion into numpy.ndarray
+  array = rec2array(array)
+  firstEvent = True
+  print "start loop "
+  for i in range(0,len(array)):
+    firstBranch = True
+    for j in range(0,len(branch_name_list[obj])):
+      try:
+        temp = array[i,j].reshape(1,array[i,j].shape[0])
+      except:
+        # this is happening if a single values instead of an array (even if empty) is stored
+        temp = np.zeros((1, int(array[i,branch_name_list[obj].index(obj+"N")])))
+        try:
+          temp[0,0] = array[i,j]
+        except:
+          # this is if the numbers of objects is equal to 0: i.e. objects do not exist
+          pass
+      if temp.shape[1] < 1: temp = np.zeros((1, nobjects[obj]))
+      # convert from float32 to float64
+      temp = temp.astype(float)
+      if firstBranch:
+        event = temp
+        firstBranch = False
+      else:
+        event = np.concatenate((event, temp))
+    # event.shape = (len(branch_name_list[obj]), array[i,j].shape[0])
+    if event.shape[1] >= nobjects[obj]:
+      event = event[:,:nobjects[obj]]
+    else:
+      event = np.hstack((event, np.zeros((len(branch_name_list[obj]),nobjects[obj]-event.shape[1]))))
+    event = event.reshape(1, len(branch_name_list[obj]), nobjects[obj])
+    if firstEvent:
+      allevents = event
+      firstEvent = False
+    else:
+      allevents = np.concatenate((allevents, event))
+    # print allevents.shape
+    if i%50000 == 0:
+      print "At ", float(i)/len(array)*100, "%"
+    if i%50000 == 0 and i > 0:
+      postfix = str(i/50000).zfill(4)
+      np.save(output_name+"_"+postfix+".npy", allevents)
+      del allevents
+      firstEvent = True
+  # return numpy.ndarray whose shape is (n_events,branches.size(), nobjects[obj])
 
-def selectBranches(file_name, tree_name, branch_names, selection_cuts):
-    array = root2array(filenames=file_name, treename=tree_name, branches=branch_names, selection=selection_cuts)
-    # it needs 2 steps to a proper coversion into numpy.ndarray
-    array = rec2array(array)
-    for i in range(0,len(array)):
-        for j in range(0,len(branch_names)):
-            try:
-                temp = array[i,j].reshape(1,array[i,j].shape[0])
-            except:
-                temp = np.zeros((1, int(array[i,branch_names.index(objects[branch_name_list.index(branch_names)]+"N")])))
-                try:
-                    temp[0,0] = array[i,j]
-                except:
-                    pass
-            if temp.shape[1] < 1:
-                temp = np.zeros((1, njets))
-            # convert from float32 to float64
-            temp = temp.astype(float)
-            if j == 0:
-                event = temp
-            else:
-                event = np.concatenate((event, temp))
-        # event.shape = (len(branch_names), array[i,j].shape[0])
-        if event.shape[1] >= njets:
-            event = event[:,:njets]
-        else:
-            event = np.hstack((event, np.zeros((len(branch_names),njets-event.shape[1]))))
-        event = event.reshape(1, len(branch_names), njets)
-        if i==0:
-            allevents = event
-        else:
-            allevents = np.concatenate((allevents, event))
-    # return numpy.ndarray whose shape is (n_events,branches.size(), njets)
-    print allevents.shape
-    return allevents
 
 
 path = "/nfs/dust/cms/user/amalara/OfficeNetwork/nTuples/"
@@ -77,10 +89,9 @@ processes.append("DY4JetsToLL")
 
 from Utils import *
 
-for index, branch_names in enumerate(branch_name_list):
-    for bkg in processes:
-        output_name = output_path+bkg+"_"+branch_outputnames[objects[index]]+".npy"
-        print output_name
-        file_name = path+"uhh2.AnalysisModuleRunner.MC."+bkg+".root"
-        output = selectBranches(file_name, tree_name, branch_names, selection_cuts)
-        np.save(output_name, output)
+for obj in branch_name_list:
+  for bkg in processes:
+    print obj, bkg
+    output_name = output_path+bkg+"_"+branch_outputnames[obj]
+    file_name = path+"uhh2.AnalysisModuleRunner.MC."+bkg+".root"
+    output = selectBranches(file_name, tree_name, obj, selection_cuts, output_name)
